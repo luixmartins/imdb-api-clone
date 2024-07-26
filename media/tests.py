@@ -68,3 +68,9 @@ class MediaSerializerTestCase(TestCase):
         self.assertEqual(media.year, 2020)
         self.assertEqual(media.duration, 120)
         self.assertEqual(media.genre.count(), 3)
+        
+    def test_get_media_serializer(self):
+        media = Media.objects.get(pk=self.media.pk)
+        serializer = MediaSerializer(media)
+
+        print(serializer.data)     
