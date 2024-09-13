@@ -51,4 +51,9 @@ class MediaDetailUpdateDelete(APIView):
     def delete(self, request, pk):
         media = Media.objects.get(pk=pk)
         
-        media.delete()
+        try:
+            media.delete()
+            return Response(status=204)
+        
+        except Exception as e:
+            return Response(status=400) 

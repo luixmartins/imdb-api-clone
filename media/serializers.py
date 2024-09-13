@@ -5,6 +5,14 @@ from datetime import datetime
 
 from .models import Media, Genre
 
+def validate_title(title: str) -> str:
+    """
+        Verify that the title does not already exist in the database.
+    """
+    if Media.objects.filter(title=title).exists():
+        raise serializers.ValidationError("Title already exists")
+    return title
+
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
@@ -23,11 +31,6 @@ class MediaSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['id']
 
-    def validate_title(self, value):
-        if Media.objects.filter(title=value).exists():
-            raise serializers.ValidationError('Title already exists')
-        return value
-
     def validate_year(self, value):
         if value < 1900:
             raise serializers.ValidationError('Year must be greater than 1900')
@@ -38,6 +41,9 @@ class MediaSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         if not self.genres:
             raise serializers.ValidationError('Genre is required')
+        
+        if not validate_title(validated_data['title']):
+            raise serializers.ValidationError('Title already exists')
 
         try:
             media = Media.objects.create(**validated_data)
@@ -57,12 +63,13 @@ class MediaSerializer(serializers.ModelSerializer):
 
         if self.genres:
             try:
-                genres = [Genre.objects.get_or_create(name=name)[0] for name in self.genres]
-                instance.genre.set(genres)
+                data = [Genre.objects.get_or_create(name=genre['name'])[0] for genre in self.genres]
+                
+                instance.genre.set(data)
             except Exception as e:
                 raise serializers.ValidationError(f'Error updating media: {e}')
-        
         instance.save()
+        
         return instance
 """ 
 class MediaSerializer(serializers.ModelSerializer):
